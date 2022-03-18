@@ -1,0 +1,41 @@
+version: '2.3'
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+services:
+  workspace:
+    build:
+      context: ./workspace
+      args:
+        - LARADOCK_PHP_VERSION=7.4
+        - PUID=1000
+        - PGID=1000
+    volumes:
+      - ../:/var/www
+      - ./workspace/supervisord.d:/etc/supervisord.d
+    extra_hosts:
+      - "dockerhost:10.0.75.1"
+    ports:
+      - "22:22"
+    tty: true
+    environment:
+      - PHP_IDE_CONFIG=serverName=laradock
+      - DOCKER_HOST=tcp://docker-in-docker:2375
+    networks:
+      - frontend
+      - backend
+
+  selenium:
+    image: selenium/standalone-chrome:3.141.59-dubnium
+    ports:
+      - "${SELENIUM_PORT}:4444"
+    volumes:
+      - /dev/shm:/dev/shm
+      - ../storage/app:/storage/app
+    networks:
+      - frontend
+      - backend
